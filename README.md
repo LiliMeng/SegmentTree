@@ -274,3 +274,136 @@ By using `4 * n`, you ensure that there is always enough space for all internal 
 
 - Using **`4 * n`** instead of `2 * n` ensures that the segment tree can handle dynamic intervals, especially in problems involving **sweep line algorithms** or complex interval management (like the rectangle area problem).
 - The additional space ensures that the segment tree can handle updates, merges, and splits of intervals correctly, without running into issues caused by an incomplete or unbalanced tree structure.
+
+
+Certainly! Let's walk through a detailed **step-by-step example** of solving the rectangle area problem using a **sweep line algorithm combined with a segment tree**. We'll use a simple set of rectangles to explain each step in detail.
+
+### Problem Recap
+
+We are given a list of rectangles, where each rectangle is defined by its bottom-left corner \((x1, y1)\) and top-right corner \((x2, y2)\). We want to calculate the total area covered by all rectangles, ensuring that overlapping areas are only counted once. The answer should be returned modulo \(10^9 + 7\).
+
+### Example Input
+
+Consider the following input with **3 rectangles**:
+```plaintext
+rectangles = [
+    [1, 1, 4, 4],  # Rectangle 1 from (1, 1) to (4, 4)
+    [2, 2, 5, 6],  # Rectangle 2 from (2, 2) to (5, 6)
+    [3, 1, 6, 3]   # Rectangle 3 from (3, 1) to (6, 3)
+]
+```
+
+### Step 1: Event Generation and Collecting Unique Y-Coordinates
+
+For each rectangle, we generate two types of **events**:
+- A **start event** when a rectangle begins at `x1`.
+- An **end event** when a rectangle ends at `x2`.
+
+Each event stores the X-coordinate of the event, the Y-interval \([y1, y2]\), and whether the event is starting (`+1`) or ending (`-1`).
+
+**Generated Events**:
+```plaintext
+(1, 1, 4, 1)  # Start of Rectangle 1
+(4, 1, 4, -1)  # End of Rectangle 1
+(2, 2, 6, 1)  # Start of Rectangle 2
+(5, 2, 6, -1)  # End of Rectangle 2
+(3, 1, 3, 1)  # Start of Rectangle 3
+(6, 1, 3, -1)  # End of Rectangle 3
+```
+
+We also collect all unique Y-coordinates from the rectangles: 
+```plaintext
+Unique Y-coordinates = [1, 2, 3, 4, 6]
+```
+
+### Step 2: Sorting the Events
+
+Next, we **sort the events** based on their X-coordinate. If two events have the same X-coordinate, start events are processed before end events to ensure proper updates in the segment tree.
+
+**Sorted Events**:
+```plaintext
+(1, 1, 4, 1)  # Start of Rectangle 1
+(2, 2, 6, 1)  # Start of Rectangle 2
+(3, 1, 3, 1)  # Start of Rectangle 3
+(4, 1, 4, -1)  # End of Rectangle 1
+(5, 2, 6, -1)  # End of Rectangle 2
+(6, 1, 3, -1)  # End of Rectangle 3
+```
+
+### Step 3: Initializing the Segment Tree
+
+We initialize a **segment tree** that operates over the **unique Y-coordinates**:
+```plaintext
+Y-coordinates = [1, 2, 3, 4, 6]
+```
+
+We need to map the Y-coordinates to indices that can be used by the segment tree. The **mapping** of Y-values to their indices:
+```plaintext
+ys_index = {1: 0, 2: 1, 3: 2, 4: 3, 6: 4}
+```
+
+### Step 4: Processing the Events Using the Sweep Line Algorithm
+
+We now process each event, sweeping from left to right along the X-axis. We will update the segment tree and compute the area contribution from the current X-coordinate to the next one. 
+
+- We initialize `prev_x = 1` (the X-coordinate of the first event).
+- We initialize `area = 0` to keep track of the total area covered.
+
+#### Event 1: (1, 1, 4, 1) (Start of Rectangle 1)
+- **Current X = 1**
+- Y-interval = \([1, 4)\)
+- We update the segment tree to indicate that this Y-interval is now covered by a rectangle.
+- **No area is calculated** yet because we haven't moved along the X-axis.
+
+#### Event 2: (2, 2, 6, 1) (Start of Rectangle 2)
+- **Current X = 2**
+- Calculate the **covered Y-length** using the segment tree. 
+- The Y-length covered by Rectangle 1 from \([1, 4)\) is `3`. 
+- Calculate the **area**: \((2 - 1) \times 3 = 3\).
+- Add `3` to `area`: `area = 3`.
+- Y-interval for this rectangle is \([2, 6)\). Update the segment tree to reflect this new interval.
+
+#### Event 3: (3, 1, 3, 1) (Start of Rectangle 3)
+- **Current X = 3**
+- Calculate the **covered Y-length** using the segment tree.
+- The Y-length covered by Rectangle 1 and Rectangle 2 is `4` (from Y = 1 to Y = 4).
+- Calculate the **area**: \((3 - 2) \times 4 = 4\).
+- Add `4` to `area`: `area = 7`.
+- Y-interval for this rectangle is \([1, 3)\). Update the segment tree.
+
+#### Event 4: (4, 1, 4, -1) (End of Rectangle 1)
+- **Current X = 4**
+- Calculate the **covered Y-length** using the segment tree.
+- The Y-length covered by Rectangle 2 and Rectangle 3 is `4` (from Y = 1 to Y = 4).
+- Calculate the **area**: \((4 - 3) \times 4 = 4\).
+- Add `4` to `area`: `area = 11`.
+- Remove the Y-interval \([1, 4)\) from the segment tree, as Rectangle 1 ends.
+
+#### Event 5: (5, 2, 6, -1) (End of Rectangle 2)
+- **Current X = 5**
+- Calculate the **covered Y-length** using the segment tree.
+- The Y-length covered by Rectangle 3 is `2` (from Y = 1 to Y = 3).
+- Calculate the **area**: \((5 - 4) \times 2 = 2\).
+- Add `2` to `area`: `area = 13`.
+- Remove the Y-interval \([2, 6)\) from the segment tree, as Rectangle 2 ends.
+
+#### Event 6: (6, 1, 3, -1) (End of Rectangle 3)
+- **Current X = 6**
+- Calculate the **covered Y-length** using the segment tree.
+- Now there are no covered intervals, so the Y-length is `0`.
+- Calculate the **area**: \((6 - 5) \times 0 = 0\).
+- Remove the Y-interval \([1, 3)\) from the segment tree, as Rectangle 3 ends.
+
+### Final Area Calculation
+
+After processing all events, the total area covered by the rectangles is `13`. Since this is less than \(10^9 + 7\), we return `13` as the final answer.
+
+### Summary of Area Calculations:
+1. Between X = 1 and X = 2: Area = \(3\)
+2. Between X = 2 and X = 3: Area = \(4\)
+3. Between X = 3 and X = 4: Area = \(4\)
+4. Between X = 4 and X = 5: Area = \(2\)
+5. Between X = 5 and X = 6: Area = \(0\)
+
+### Conclusion:
+The **total area covered** by the rectangles is **13**, which is the final result.
