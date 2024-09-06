@@ -1,6 +1,8 @@
 # SegmentTree
 
-Leetcode 850: https://leetcode.com/problems/rectangle-area-ii/description/
+Leetcode 307 Range Sum Query: https://leetcode.com/problems/range-sum-query-mutable/
+
+Leetcode 850 Rectangle Area II: https://leetcode.com/problems/rectangle-area-ii/description/
 
 The problem of calculating the total area covered by rectangles (where overlaps are counted only once) can be solved using a **sweep line algorithm combined with a segment tree**. The segment tree helps manage the Y-intervals dynamically as we sweep across the X-axis, and it ensures that we correctly account for overlapping regions.
 
